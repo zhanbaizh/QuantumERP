@@ -1,0 +1,118 @@
+CREATE TABLE Department (
+    department_id SERIAL PRIMARY KEY,
+    department_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Worker (
+    worker_id SERIAL PRIMARY KEY,
+    worker_name VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    department_id INT REFERENCES Department(department_id)
+);
+
+CREATE TABLE Client (
+    client_id SERIAL PRIMARY KEY,
+    client_name VARCHAR(255) NOT NULL,
+    contact_info TEXT
+);
+
+CREATE TABLE "Order" (
+    order_id SERIAL PRIMARY KEY,
+    order_date TIMESTAMP NOT NULL,
+    order_status VARCHAR(50) NOT NULL,
+    product_quantity INT NOT NULL,
+    product_specs JSONB,
+    required_materials TEXT,
+    expected_completion_date DATE,
+    actual_completion_date DATE,
+    order_cost DECIMAL(10, 2) NOT NULL,
+    client_id INT REFERENCES Client(client_id)
+);
+
+CREATE TABLE TechCard (
+    tech_card_id SERIAL PRIMARY KEY,
+    order_id INT UNIQUE REFERENCES "Order"(order_id) 
+);
+
+CREATE TABLE Operation (
+    operation_id SERIAL PRIMARY KEY,
+    tech_card_id INT REFERENCES TechCard(tech_card_id),
+    operation_name VARCHAR(255) NOT NULL,
+    required_equipment TEXT,
+    required_materials TEXT,
+    planned_work_volume DECIMAL(10, 2),
+    actual_work_volume DECIMAL(10, 2)
+);
+
+CREATE TABLE Material (
+    material_id SERIAL PRIMARY KEY,
+    material_name VARCHAR(255) NOT NULL,
+    quantity_in_stock DECIMAL(10, 2) NOT NULL,
+    price_per_unit DECIMAL(10, 2) NOT NULL,
+    total_cost DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE Consumable (
+    consumable_id SERIAL PRIMARY KEY,
+    consumable_name VARCHAR(255) NOT NULL,
+    quantity_in_stock DECIMAL(10, 2) NOT NULL,
+    price_per_unit DECIMAL(10, 2) NOT NULL,
+    total_cost DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE Equipment (
+    equipment_id SERIAL PRIMARY KEY,
+    equipment_name VARCHAR(255) NOT NULL,
+    equipment_type VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    department_id INT REFERENCES Department(department_id)
+);
+
+CREATE TABLE ProductionCycle (
+    cycle_id SERIAL PRIMARY KEY,
+    cycle_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE RawMaterialWarehouse (
+    warehouse_id SERIAL PRIMARY KEY
+);
+
+CREATE TABLE FinishedProductWarehouse (
+    warehouse_id SERIAL PRIMARY KEY
+);
+
+-- Связь многие-ко-многим между Operation и Equipment
+CREATE TABLE OperationEquipment (
+    operation_id INT REFERENCES Operation(operation_id),
+    equipment_id INT REFERENCES Equipment(equipment_id),
+    PRIMARY KEY (operation_id, equipment_id)
+);
+
+-- Связь многие-ко-многим между Operation и Material
+CREATE TABLE OperationMaterial (
+    operation_id INT REFERENCES Operation(operation_id),
+    material_id INT REFERENCES Material(material_id),
+    PRIMARY KEY (operation_id, material_id)
+);
+
+-- Связь многие-ко-многим между Operation и Consumable
+CREATE TABLE OperationConsumable (
+    operation_id INT REFERENCES Operation(operation_id),
+    consumable_id INT REFERENCES Consumable(consumable_id),
+    PRIMARY KEY (operation_id, consumable_id)
+);
+
+-- Связь многие-ко-многим между Operation и Worker
+CREATE TABLE OperationWorker (
+    operation_id INT REFERENCES Operation(operation_id),
+    worker_id INT REFERENCES Worker(worker_id),
+    PRIMARY KEY (operation_id, worker_id)
+);
+
+-- Связь многие-ко-многим между ProductionCycle и Operation
+CREATE TABLE CycleOperation (
+    cycle_id INT REFERENCES ProductionCycle(cycle_id),
+    operation_id INT REFERENCES Operation(operation_id),
+    operation_order INT NOT NULL, 
+    PRIMARY KEY (cycle_id, operation_id)
+);
